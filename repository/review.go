@@ -48,6 +48,16 @@ func (r *Repository) GetReviewsByMovieID(ctx context.Context, id int, limit int,
 
 // }
 
-func (r *Repository) DeleteReview(ctx context.Context, id int, name string) {
+func (r *Repository) DeleteReview(ctx context.Context, id int) error {
+	res, err := r.db.Exec(ctx, queryDeleteReview, id)
+	if err != nil {
+		return fmt.Errorf("failed to delete review: %w", err)
+	}
 
+	rows := res.RowsAffected()
+	if rows == 0 {
+		return ErrReviewNotFound
+	}
+
+	return nil
 }

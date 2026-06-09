@@ -30,6 +30,7 @@ func (h *Handler) Run() {
 	admin.DELETE("/movies/:id", h.DeleteMovie)
 	admin.POST("/genres", h.CreateGenre)
 	admin.DELETE("/genres/:id", h.DeleteGenre)
+	admin.DELETE("/reviews/:id", h.DeleteReview)
 
 	r.Run()
 }
