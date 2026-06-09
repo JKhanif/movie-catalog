@@ -29,8 +29,25 @@ func (r *Repository) GetAllGenres(ctx context.Context) ([]model.Genre, error) {
 }
 
 func (r *Repository) GetGenresByMovieID(ctx context.Context, id int) ([]model.Genre, error) {
+	var g []model.Genre
 
-	return nil, nil
+	rows, err := r.db.Query(ctx, queryGetGenresByMovieID, id)
+	if err != nil {
+		return nil, fmt.Errorf("failed to query genre: %w", err)
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var genre model.Genre
+		err := rows.Scan(&genre.ID, &genre.Name)
+		if err != nil {
+			return nil, fmt.Errorf("failed to scan genre: %w", err)
+		}
+
+		g = append(g, genre)
+	}
+
+	return g, nil
 }
 
 // func (r *Repository) GetGenreByID(ctx context.Context, id int) (model.Genre, error) {

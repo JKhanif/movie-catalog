@@ -24,6 +24,11 @@ const queryDeleteMovie = `DELETE FROM movies WHERE id = $1`
 
 const queryGetAllGenres = `SELECT id, name FROM genres`
 
+const queryGetGenresByMovieID = ` SELECT g.id, g.name 
+									FROM genres g 
+									JOIN movie_genres mg ON mg.genre_id = g.id 
+									WHERE mg.movie_id = $1`
+
 // const queryGetGenreByID = `SELECT id, name FROM genres WHERE id = $1`
 
 const queryCreateGenre = `INSERT INTO genres (name) VALUES ($1)`
@@ -35,9 +40,10 @@ const queryDeleteGenre = `DELETE FROM genres WHERE id = $1`
 // REVIEW REVIEW REVIEW REVIEW REVIEW REVIEW REVIEW REVIEW REVIEW REVIEW REVIEW REVIEW REVIEW
 
 const queryGetReviewsByMovieID = `SELECT id, movie_id, author, rating, text, created_at
-									FROM reviews WHERE movie_id = $1`
+									FROM reviews WHERE movie_id = $1 
+									ORDER BY created_at DESC LIMIT $2 OFFSET $3`
 
-const queryCreateReview = `INSERT INTO reviews (movie_id, author, rating, text) VALUES ($1, $2, $3, $4)`
+const queryCreateReview = `INSERT INTO reviews (movie_id, author, rating, text) VALUES ($1, $2, $3, $4) RETURNING id`
 
 // const queryUpdateReview = `UPDATE reviews SET author = $1, rating = $2, text = $3 WHERE id = $4`
 
