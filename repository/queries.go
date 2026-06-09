@@ -14,6 +14,7 @@ const queryGetAllMovies = `SELECT m.id, m.title, m.year, m.description, m.direct
 								WHERE mg.movie_id = m.id AND g.name = $1
 							))
 							AND ($2 = 0 OR m.year = $2)
+							AND ($4 = '' OR to_tsvector('russian', m.title || ' ' || COALESCE(m.description, '')) @@ plainto_tsquery('russian', $4))
 							GROUP BY m.id
 							HAVING ($3 = 0 OR COALESCE(AVG(r.rating), 0) >= $3)`
 
@@ -37,8 +38,6 @@ const queryGetMovieByID = `SELECT m.id, m.title, m.year, m.description, m.direct
 							GROUP BY m.id`
 
 const queryCreateMovie = `INSERT INTO movies (title, year, description, director) VALUES ($1, $2, $3, $4) RETURNING id`
-
-const queryUpdateMovie = `UPDATE movies SET title = $1, year = $2, description = $3, director = $4 WHERE id = $5`
 
 const queryDeleteMovie = `DELETE FROM movies WHERE id = $1`
 

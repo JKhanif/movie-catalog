@@ -5,11 +5,12 @@ import (
 	"errors"
 	"fmt"
 	"movie_catalog/model"
+	"strings"
 
 	"github.com/jackc/pgx/v5"
 )
 
-func (r *Repository) GetAllMovies(ctx context.Context, genre string, year int, minRating float64, sort string, order string, limit int, offset int) ([]model.MovieWithStats, error) {
+func (r *Repository) GetAllMovies(ctx context.Context, genre string, year int, minRating float64, search string, sort string, order string, limit int, offset int) ([]model.MovieWithStats, error) {
 	validSorts := map[string]bool{"year": true, "rating": true, "created_at": true}
 	validOrders := map[string]bool{"asc": true, "desc": true}
 
@@ -35,9 +36,9 @@ func (r *Repository) GetAllMovies(ctx context.Context, genre string, year int, m
 		direction = "ASC"
 	}
 
-	query := queryGetAllMovies + fmt.Sprintf(" ORDER BY %s %s LIMIT $4 OFFSET $5", sortColumn, direction)
+	query := queryGetAllMovies + fmt.Sprintf(" ORDER BY %s %s LIMIT $5 OFFSET $6", sortColumn, direction)
 
-	rows, err := r.db.Query(ctx, query, genre, year, minRating, limit, offset)
+	rows, err := r.db.Query(ctx, query, genre, year, minRating, search, limit, offset)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get movies: %w", err)
 	}
@@ -124,14 +125,47 @@ func (r *Repository) CreateMovie(ctx context.Context, m model.Movie) (int, error
 	return id, nil
 }
 
-func (r *Repository) UpdateMovie(ctx context.Context, id int, m model.Movie) error {
-	res, err := r.db.Exec(ctx, queryUpdateMovie, m.Title, m.Year, m.Description, m.Director, id)
+func (r *Repository) UpdateMovie(ctx context.Context, id int, req model.UpdateMovieRequest) error {
+	var sets []string
+	var args []any
+	argIdx := 1
+
+	if req.Title != nil {
+		sets = append(sets, fmt.Sprintf("title = $%d", argIdx))
+		args = append(args, *req.Title)
+		argIdx++
+	}
+	if req.Year != nil {
+		sets = append(sets, fmt.Sprintf("year = $%d", argIdx))
+		args = append(args, *req.Year)
+		argIdx++
+	}
+	if req.Description != nil {
+		sets = append(sets, fmt.Sprintf("description = $%d", argIdx))
+		args = append(args, *req.Description)
+		argIdx++
+	}
+	if req.Director != nil {
+		sets = append(sets, fmt.Sprintf("director = $%d", argIdx))
+		args = append(args, *req.Director)
+		argIdx++
+	}
+
+	if len(sets) == 0 {
+		return fmt.Errorf("no fields to update")
+	}
+
+	sets = append(sets, "updated_at = NOW()")
+	args = append(args, id)
+
+	query := fmt.Sprintf("UPDATE movies SET %s WHERE id = $%d", strings.Join(sets, ", "), argIdx)
+
+	res, err := r.db.Exec(ctx, query, args...)
 	if err != nil {
 		return fmt.Errorf("failed to update movie: %w", err)
 	}
 
-	rows := res.RowsAffected()
-	if rows == 0 {
+	if res.RowsAffected() == 0 {
 		return ErrMovieNotFound
 	}
 

@@ -13,6 +13,7 @@ import (
 
 func (h *Handler) GetAllMovies(c *gin.Context) {
 	genre := c.Query("genre")
+	search := c.Query("search")
 
 	yearStr := c.Query("year")
 	year := 0
@@ -51,7 +52,7 @@ func (h *Handler) GetAllMovies(c *gin.Context) {
 		return
 	}
 
-	movies, err := h.repo.GetAllMovies(c, genre, year, minRating, sort, order, limit, offset)
+	movies, err := h.repo.GetAllMovies(c, genre, year, minRating, search, sort, order, limit, offset)
 	if err != nil {
 		log.Printf("Failed to fetch movies: %v", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch movies"})
@@ -134,15 +135,15 @@ func (h *Handler) UpdateMovie(c *gin.Context) {
 		return
 	}
 
-	var m model.Movie
-	err = c.ShouldBindJSON(&m)
+	var req model.UpdateMovieRequest
+	err = c.ShouldBindJSON(&req)
 	if err != nil {
 		log.Printf("Invalid request body: %v", err)
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request body"})
 		return
 	}
 
-	err = h.repo.UpdateMovie(c, id, m)
+	err = h.repo.UpdateMovie(c, id, req)
 	if err != nil {
 		if errors.Is(err, repo.ErrMovieNotFound) {
 			c.JSON(http.StatusNotFound, gin.H{"error": "Movie not found"})
