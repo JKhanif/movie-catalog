@@ -16,7 +16,21 @@ func (h *Handler) GetAllMovies(c *gin.Context) {
 }
 
 func (h *Handler) GetTopMovies(c *gin.Context) {
+	minReviewsStr := c.DefaultQuery("min_reviews", "3")
+	minReviews, err := strconv.Atoi(minReviewsStr)
+	if err != nil || minReviews < 0 {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid min_reviews"})
+		return
+	}
 
+	movies, err := h.repo.GetTopMovies(c, minReviews)
+	if err != nil {
+		log.Printf("Failed to fetch top movies: %v", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch top movies"})
+		return
+	}
+
+	c.JSON(http.StatusOK, movies)
 }
 
 func (h *Handler) GetMovieByID(c *gin.Context) {

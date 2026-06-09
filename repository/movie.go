@@ -13,8 +13,27 @@ func (r *Repository) GetAllMovies(ctx context.Context) {
 
 }
 
-func (r *Repository) GetTopMovies(ctx context.Context) {
+func (r *Repository) GetTopMovies(ctx context.Context, minReviews int) ([]model.MovieWithStats, error) {
+	var movies []model.MovieWithStats
 
+	rows, err := r.db.Query(ctx, queryGetTopMovies, minReviews)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get top movies: %w", err)
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var m model.MovieWithStats
+		err := rows.Scan(&m.ID, &m.Title, &m.Year, &m.Description,
+			&m.Director, &m.AvgRating, &m.ReviewCount)
+		if err != nil {
+			return nil, fmt.Errorf("failed to scan movie: %w", err)
+		}
+
+		movies = append(movies, m)
+	}
+
+	return movies, nil
 }
 
 func (r *Repository) GetMovieByID(ctx context.Context, id int) (model.MovieWithStats, error) {

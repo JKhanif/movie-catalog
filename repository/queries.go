@@ -4,10 +4,13 @@ package repo
 
 const queryGetAllMovies = `SELECT id, title, year, description, director, created_at, updated_at FROM movies`
 
-const queryGetTopMovies = `SELECT id, title, year, description, director, created_at, updated_at
+const queryGetTopMovies = `SELECT id, title, year, description, director, created_at, updated_at, 
+								COALESCE(AVG(r.rating), 0) AS avg_rating,
+								COUNT(r.id) AS review_count
 							FROM movies m
-							LEFT JOIN reviews r ON m.id = r.movie_id
+							LEFT JOIN reviews r ON r.movie_id = m.id
 							GROUP BY m.id
+							HAVING COUNT(r.id) >= $1
 							ORDER BY AVG(r.rating) DESC
 							LIMIT 10`
 
