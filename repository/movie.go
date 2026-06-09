@@ -79,9 +79,14 @@ func (r *Repository) CreateMovie(ctx context.Context, m model.Movie) (int, error
 }
 
 func (r *Repository) UpdateMovie(ctx context.Context, id int, m model.Movie) error {
-	_, err := r.db.Exec(ctx, queryUpdateMovie, m.Title, m.Year, m.Description, m.Director, id)
+	res, err := r.db.Exec(ctx, queryUpdateMovie, m.Title, m.Year, m.Description, m.Director, id)
 	if err != nil {
 		return fmt.Errorf("failed to update movie: %w", err)
+	}
+
+	rows := res.RowsAffected()
+	if rows == 0 {
+		return ErrMovieNotFound
 	}
 
 	return nil

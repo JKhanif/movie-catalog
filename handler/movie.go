@@ -98,6 +98,10 @@ func (h *Handler) UpdateMovie(c *gin.Context) {
 
 	err = h.repo.UpdateMovie(c, id, m)
 	if err != nil {
+		if errors.Is(err, repo.ErrMovieNotFound) {
+			c.JSON(http.StatusNotFound, gin.H{"error": "Movie not found"})
+			return
+		}
 		log.Printf("Failed to update movie: %v", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update movie"})
 		return
