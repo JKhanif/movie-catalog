@@ -14,8 +14,14 @@ const queryGetTopMovies = `SELECT id, title, year, description, director, create
 							ORDER BY AVG(r.rating) DESC
 							LIMIT 10`
 
-const queryGetMovieByID = `SELECT id, title, year, description, director, created_at, updated_at 
-    						FROM movies WHERE id = $1`
+const queryGetMovieByID = `SELECT m.id, m.title, m.year, m.description, m.director,
+									m.created_at, m.updated_at,
+								COALESCE(AVG(r.rating), 0) AS avg_rating,
+								COUNT(r.id) AS review_count
+							FROM movies m
+							LEFT JOIN reviews r ON r.movie_id = m.id
+							WHERE m.id = $1
+							GROUP BY m.id`
 
 const queryCreateMovie = `INSERT INTO movies (title, year, description, director) VALUES ($1, $2, $3, $4) RETURNING id`
 
@@ -56,7 +62,7 @@ const queryDeleteReview = `DELETE FROM reviews WHERE id = $1`
 
 // const queryGetAllActors = `SELECT id, name FROM actors`
 
-const queryGetActorsByMovieID = `SELECT name FROM actors a
+const queryGetActorsByMovieID = `SELECT id, name FROM actors a
 								JOIN movie_actors ma ON a.id = ma.actor_id
 								WHERE ma.movie_id = $1`
 

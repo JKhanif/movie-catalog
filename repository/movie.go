@@ -25,7 +25,7 @@ func (r *Repository) GetTopMovies(ctx context.Context, minReviews int) ([]model.
 	for rows.Next() {
 		var m model.MovieWithStats
 		err := rows.Scan(&m.ID, &m.Title, &m.Year, &m.Description,
-			&m.Director, &m.AvgRating, &m.ReviewCount)
+			&m.Director, &m.CreatedAt, &m.UpdatedAt, &m.AvgRating, &m.ReviewCount)
 		if err != nil {
 			return nil, fmt.Errorf("failed to scan movie: %w", err)
 		}
@@ -40,7 +40,8 @@ func (r *Repository) GetMovieByID(ctx context.Context, id int) (model.MovieWithS
 	var m model.MovieWithStats
 
 	err := r.db.QueryRow(ctx, queryGetMovieByID, id).Scan(
-		&m.ID, &m.Title, &m.Year, &m.Description, &m.Director, &m.CreatedAt, &m.UpdatedAt)
+		&m.ID, &m.Title, &m.Year, &m.Description, &m.Director,
+		&m.CreatedAt, &m.UpdatedAt, &m.AvgRating, &m.ReviewCount)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return m, ErrMovieNotFound
@@ -53,6 +54,12 @@ func (r *Repository) GetMovieByID(ctx context.Context, id int) (model.MovieWithS
 		return m, fmt.Errorf("failed to get genres for movie: %w", err)
 	}
 
+	actors, err := r.GetActorsByMovieID(ctx, id)
+	if err != nil {
+		return m, fmt.Errorf("failed to get actors: %w", err)
+	}
+
+	m.Actors = actors
 	m.Genres = genres
 
 	return m, nil
