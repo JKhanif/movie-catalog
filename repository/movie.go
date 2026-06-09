@@ -9,8 +9,54 @@ import (
 	"github.com/jackc/pgx/v5"
 )
 
-func (r *Repository) GetAllMovies(ctx context.Context) {
+func (r *Repository) GetAllMovies(ctx context.Context, genre string, year int, minRating float64, sort string, order string, limit int, offset int) ([]model.MovieWithStats, error) {
+	validSorts := map[string]bool{"year": true, "rating": true, "created_at": true}
+	validOrders := map[string]bool{"asc": true, "desc": true}
 
+	if !validSorts[sort] {
+		sort = "created_at"
+	}
+	if !validOrders[order] {
+		order = "desc"
+	}
+
+	var sortColumn string
+	switch sort {
+	case "rating":
+		sortColumn = "avg_rating"
+	case "year":
+		sortColumn = "m.year"
+	default:
+		sortColumn = "m.created_at"
+	}
+
+	direction := "DESC"
+	if order == "asc" {
+		direction = "ASC"
+	}
+
+	query := queryGetAllMovies + fmt.Sprintf(" ORDER BY %s %s LIMIT $4 OFFSET $5", sortColumn, direction)
+
+	rows, err := r.db.Query(ctx, query, genre, year, minRating, limit, offset)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get movies: %w", err)
+	}
+	defer rows.Close()
+
+	var movies []model.MovieWithStats
+	for rows.Next() {
+		var m model.MovieWithStats
+		err := rows.Scan(&m.ID, &m.Title, &m.Year, &m.Description,
+			&m.Director, &m.CreatedAt, &m.UpdatedAt, &m.AvgRating, &m.ReviewCount)
+		if err != nil {
+			return nil, fmt.Errorf("failed to scan movie: %w", err)
+		}
+		m.Genres = []model.Genre{}
+		m.Actors = []model.Actor{}
+		movies = append(movies, m)
+	}
+
+	return movies, nil
 }
 
 func (r *Repository) GetTopMovies(ctx context.Context, minReviews int) ([]model.MovieWithStats, error) {

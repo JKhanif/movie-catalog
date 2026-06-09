@@ -2,7 +2,20 @@ package repo
 
 // MOVIE MOVIE MOVIE MOVIE MOVIE MOVIE MOVIE MOVIE MOVIE MOVIE MOVIE MOVIE MOVIE
 
-const queryGetAllMovies = `SELECT id, title, year, description, director, created_at, updated_at FROM movies`
+const queryGetAllMovies = `SELECT m.id, m.title, m.year, m.description, m.director,
+								m.created_at, m.updated_at,
+								COALESCE(AVG(r.rating), 0) AS avg_rating,
+								COUNT(r.id) AS review_count
+							FROM movies m
+							LEFT JOIN reviews r ON r.movie_id = m.id
+							WHERE ($1 = '' OR EXISTS (
+								SELECT 1 FROM movie_genres mg
+								JOIN genres g ON g.id = mg.genre_id
+								WHERE mg.movie_id = m.id AND g.name = $1
+							))
+							AND ($2 = 0 OR m.year = $2)
+							GROUP BY m.id
+							HAVING ($3 = 0 OR COALESCE(AVG(r.rating), 0) >= $3)`
 
 const queryGetTopMovies = `SELECT id, title, year, description, director, created_at, updated_at, 
 								COALESCE(AVG(r.rating), 0) AS avg_rating,

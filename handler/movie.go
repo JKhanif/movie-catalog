@@ -12,7 +12,53 @@ import (
 )
 
 func (h *Handler) GetAllMovies(c *gin.Context) {
+	genre := c.Query("genre")
 
+	yearStr := c.Query("year")
+	year := 0
+	if yearStr != "" {
+		var err error
+		year, err = strconv.Atoi(yearStr)
+		if err != nil || year < 0 {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid year"})
+			return
+		}
+	}
+
+	minRatingStr := c.Query("min_rating")
+	var minRating float64
+	if minRatingStr != "" {
+		var err error
+		minRating, err = strconv.ParseFloat(minRatingStr, 64)
+		if err != nil || minRating < 0 {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid min_rating"})
+			return
+		}
+	}
+
+	sort := c.DefaultQuery("sort", "created_at")
+	order := c.DefaultQuery("order", "desc")
+
+	limit, err := strconv.Atoi(c.DefaultQuery("limit", "10"))
+	if err != nil || limit <= 0 {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid limit"})
+		return
+	}
+
+	offset, err := strconv.Atoi(c.DefaultQuery("offset", "0"))
+	if err != nil || offset < 0 {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid offset"})
+		return
+	}
+
+	movies, err := h.repo.GetAllMovies(c, genre, year, minRating, sort, order, limit, offset)
+	if err != nil {
+		log.Printf("Failed to fetch movies: %v", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch movies"})
+		return
+	}
+
+	c.JSON(http.StatusOK, movies)
 }
 
 func (h *Handler) GetTopMovies(c *gin.Context) {
