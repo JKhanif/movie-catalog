@@ -167,6 +167,10 @@ func (h *Handler) DeleteMovie(c *gin.Context) {
 
 	err = h.repo.DeleteMovie(c, id)
 	if err != nil {
+		if errors.Is(err, repo.ErrMovieNotFound) {
+			c.JSON(http.StatusNotFound, gin.H{"error": "Movie not found"})
+			return
+		}
 		log.Printf("Failed to delete movie: %v", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to delete movie"})
 		return
