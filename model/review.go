@@ -10,3 +10,9 @@ type Review struct {
 	Text      string    `json:"text"`
 	CreatedAt time.Time `json:"created_at"`
 }
+
+type CreateReviewInput struct {
+	Author string `json:"author"`
+	Rating int    `json:"rating"`
+	Text   string `json:"text"`
+}
