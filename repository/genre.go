@@ -17,7 +17,7 @@ func (r *Repository) GetAllGenres(ctx context.Context) ([]model.Genre, error) {
 
 	for rows.Next() {
 		var genre model.Genre
-		err := rows.Scan(&genre.ID, &genre.Name)
+		err := rows.Scan(&genre.ID, &genre.Name, &genre.CreatedAt)
 		if err != nil {
 			return nil, fmt.Errorf("failed to scan genre: %w", err)
 		}
@@ -39,7 +39,7 @@ func (r *Repository) GetGenresByMovieID(ctx context.Context, id int) ([]model.Ge
 
 	for rows.Next() {
 		var genre model.Genre
-		err := rows.Scan(&genre.ID, &genre.Name)
+		err := rows.Scan(&genre.ID, &genre.Name, &genre.CreatedAt)
 		if err != nil {
 			return nil, fmt.Errorf("failed to scan genre: %w", err)
 		}

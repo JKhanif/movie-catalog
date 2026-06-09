@@ -77,6 +77,8 @@ func (r *Repository) GetTopMovies(ctx context.Context, minReviews int) ([]model.
 			return nil, fmt.Errorf("failed to scan movie: %w", err)
 		}
 
+		m.Genres = []model.Genre{}
+		m.Actors = []model.Actor{}
 		movies = append(movies, m)
 	}
 
@@ -152,7 +154,7 @@ func (r *Repository) UpdateMovie(ctx context.Context, id int, req model.UpdateMo
 	}
 
 	if len(sets) == 0 {
-		return fmt.Errorf("no fields to update")
+		return ErrNoFieldsToUpdate
 	}
 
 	sets = append(sets, "updated_at = NOW()")

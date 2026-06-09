@@ -18,7 +18,8 @@ const queryGetAllMovies = `SELECT m.id, m.title, m.year, m.description, m.direct
 							GROUP BY m.id
 							HAVING ($3 = 0 OR COALESCE(AVG(r.rating), 0) >= $3)`
 
-const queryGetTopMovies = `SELECT id, title, year, description, director, created_at, updated_at, 
+const queryGetTopMovies = `SELECT m.id, m.title, m.year, m.description, m.director,
+								m.created_at, m.updated_at,
 								COALESCE(AVG(r.rating), 0) AS avg_rating,
 								COUNT(r.id) AS review_count
 							FROM movies m
@@ -43,9 +44,9 @@ const queryDeleteMovie = `DELETE FROM movies WHERE id = $1`
 
 // GENRE GENRE GENRE GENRE GENRE GENRE GENRE GENRE GENRE GENRE GENRE GENRE GENRE
 
-const queryGetAllGenres = `SELECT id, name FROM genres`
+const queryGetAllGenres = `SELECT id, name, created_at FROM genres`
 
-const queryGetGenresByMovieID = ` SELECT g.id, g.name 
+const queryGetGenresByMovieID = ` SELECT g.id, g.name, g.created_at
 									FROM genres g 
 									JOIN movie_genres mg ON mg.genre_id = g.id 
 									WHERE mg.movie_id = $1`
@@ -74,7 +75,7 @@ const queryDeleteReview = `DELETE FROM reviews WHERE id = $1`
 
 // const queryGetAllActors = `SELECT id, name FROM actors`
 
-const queryGetActorsByMovieID = `SELECT id, name FROM actors a
+const queryGetActorsByMovieID = `SELECT a.id, a.name, a.created_at FROM actors a
 								JOIN movie_actors ma ON a.id = ma.actor_id
 								WHERE ma.movie_id = $1`
 

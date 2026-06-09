@@ -25,7 +25,7 @@ func (r *Repository) GetActorsByMovieID(ctx context.Context, id int) ([]model.Ac
 
 	for rows.Next() {
 		var a model.Actor
-		err := rows.Scan(&a.ID, &a.Name)
+		err := rows.Scan(&a.ID, &a.Name, &a.CreatedAt)
 		if err != nil {
 			return nil, fmt.Errorf("failed to scan actor: %w", err)
 		}

@@ -149,6 +149,10 @@ func (h *Handler) UpdateMovie(c *gin.Context) {
 			c.JSON(http.StatusNotFound, gin.H{"error": "Movie not found"})
 			return
 		}
+		if errors.Is(err, repo.ErrNoFieldsToUpdate) {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "No fields to update"})
+			return
+		}
 		log.Printf("Failed to update movie: %v", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update movie"})
 		return
